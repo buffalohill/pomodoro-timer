@@ -9,6 +9,11 @@ const END_CAP_LABELS = {
   pause: { start: 'Genuinely relax...', end: '...then ready for more!' },
 };
 
+const SECTION_LABELS = {
+  work: 'Set work duration in minutes',
+  pause: 'Set pause duration in minutes',
+};
+
 // --- DOM references ---
 
 const app = document.getElementById('app');
@@ -18,6 +23,8 @@ const startPauseBtn = document.getElementById('start-pause-btn');
 const resetBtn = document.getElementById('reset-btn');
 const minutesViewport = document.getElementById('minutes-viewport');
 const minutesTrack = document.getElementById('minutes-track');
+const minutesPicker = document.querySelector('.minutes-picker');
+const minutesPickerLabel = document.getElementById('minutes-picker-label');
 
 // --- State ---
 
@@ -73,6 +80,7 @@ function updateDOM() {
   app.dataset.mode = currentMode;
   app.dataset.running = isRunning ? 'true' : 'false';
   updateModeSwitch();
+  updateSectionLabel();
   timeDisplay.textContent = formatTime(timeRemaining);
   timeDisplay.dateTime = formatDatetime(timeRemaining);
   startPauseBtn.textContent = isRunning ? 'Pause' : 'Start';
@@ -86,6 +94,12 @@ function updateEndCapLabels() {
     labels.start;
   minutesTrack.querySelector('.minutes-picker__end-cap--end .minutes-picker__end-cap-text').textContent =
     labels.end;
+}
+
+function updateSectionLabel() {
+  const label = SECTION_LABELS[currentMode];
+  minutesPickerLabel.textContent = label;
+  minutesPicker.setAttribute('aria-label', label);
 }
 
 function updateModeSwitch() {
