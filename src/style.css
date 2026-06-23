@@ -53,6 +53,25 @@
   --radius-md: 0.625rem;
   --radius-lg: 1rem;
   --radius-full: 9999px;
+
+  /* Minutes picker */
+  --minutes-picker-height: 4.5rem;
+  --minutes-tick-cell-width: 2.75rem;
+  --minutes-tick-width: 2px;
+  --minutes-tick-height-major: 1.25rem;
+  --minutes-indicator-size: 0.5rem;
+  --minutes-indicator-gap: var(--space-xs);
+  --minutes-baseline-width: 1px;
+  --minutes-baseline-opacity: 0.5;
+  --minutes-fade-width: 4rem;
+  --minutes-end-cap-width: 8rem;
+  --minutes-end-cap-opacity: 0.4;
+  --minutes-end-cap-font-size: var(--text-sm);
+  --minutes-end-cap-text-nudge: var(--space-sm);
+  --minutes-tick-label-height: 0.9rem;
+  --minutes-label-band-height: calc(
+    var(--minutes-tick-height-major) + var(--space-xs) + var(--minutes-tick-label-height)
+  );
 }
 
 /* Reset */
@@ -78,9 +97,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  gap: var(--space-xl);
   min-height: 100vh;
-  padding: var(--space-md);
+  padding: var(--space-xl) var(--space-md) var(--space-md);
 }
 
 #app[data-mode="work"] {
@@ -99,6 +119,152 @@ body {
 
 #app[data-mode="break"] .timer__display {
   color: var(--color-break);
+}
+
+/* Minutes picker */
+.minutes-picker {
+  width: 100%;
+  max-width: 24rem;
+  --color-minutes-label: var(--color-work);
+  --color-minutes-tick: var(--color-work);
+  --color-minutes-baseline: var(--color-work);
+  --color-minutes-end-cap: var(--color-work);
+}
+
+.minutes-picker__label {
+  margin-bottom: var(--space-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-minutes-label);
+}
+
+.minutes-picker__frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--minutes-indicator-gap);
+  width: 100%;
+}
+
+.minutes-picker__frame::before {
+  content: "";
+  position: absolute;
+  bottom: calc(var(--minutes-indicator-size) + var(--minutes-indicator-gap));
+  left: 0;
+  right: 0;
+  height: var(--minutes-baseline-width);
+  background-color: var(--color-minutes-baseline);
+  opacity: var(--minutes-baseline-opacity);
+  pointer-events: none;
+}
+
+.minutes-picker__viewport {
+  overflow-x: auto;
+  overscroll-behavior-x: none;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  width: 100%;
+  padding-inline: calc(50% - var(--minutes-tick-cell-width) / 2);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black var(--minutes-fade-width),
+    black calc(100% - var(--minutes-fade-width)),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black var(--minutes-fade-width),
+    black calc(100% - var(--minutes-fade-width)),
+    transparent
+  );
+}
+
+.minutes-picker__viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.minutes-picker__track {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  width: max-content;
+  height: var(--minutes-picker-height);
+}
+
+.minutes-picker__tick {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 var(--minutes-tick-cell-width);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-xs);
+}
+
+.minutes-picker__tick--major {
+  scroll-snap-align: center;
+}
+
+.minutes-picker__tick-label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-minutes-tick);
+  line-height: var(--line-height-tight);
+}
+
+.minutes-picker__tick-mark {
+  width: var(--minutes-tick-width);
+  background-color: var(--color-minutes-tick);
+}
+
+.minutes-picker__tick--major .minutes-picker__tick-mark {
+  height: var(--minutes-tick-height-major);
+}
+
+.minutes-picker__end-cap {
+  position: relative;
+  flex: 0 0 var(--minutes-end-cap-width);
+  width: var(--minutes-end-cap-width);
+  height: var(--minutes-picker-height);
+}
+
+.minutes-picker__end-cap-text {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--minutes-label-band-height) / 2);
+  font-size: var(--minutes-end-cap-font-size);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  color: var(--color-minutes-end-cap);
+  opacity: var(--minutes-end-cap-opacity);
+  line-height: var(--line-height-tight);
+  transform: translate(-50%, 50%);
+}
+
+.minutes-picker__end-cap--start .minutes-picker__end-cap-text {
+  transform: translate(calc(-50% + var(--minutes-end-cap-text-nudge)), 50%);
+}
+
+.minutes-picker__end-cap--end .minutes-picker__end-cap-text {
+  transform: translate(calc(-50% - var(--minutes-end-cap-text-nudge)), 50%);
+}
+
+.minutes-picker__indicator {
+  flex-shrink: 0;
+  width: 0;
+  height: 0;
+  border-left: calc(var(--minutes-indicator-size) / 2) solid transparent;
+  border-right: calc(var(--minutes-indicator-size) / 2) solid transparent;
+  border-bottom: var(--minutes-indicator-size) solid var(--color-minutes-tick);
+  pointer-events: none;
 }
 
 /* Timer */
