@@ -1,8 +1,12 @@
-const BREAK_DURATION = 5 * 60;
-const WORK_MINUTES_OPTIONS = [5, 10, 15, 20, 25, 30, 35, 40, 45];
+const MINUTES_OPTIONS = [5, 10, 15, 20, 25, 30, 35, 40, 45];
+
+const END_CAP_LABELS = {
+  work: { start: "Let's go!", end: '...then take a break!' },
+  pause: { start: 'Refuel your energy!', end: '...then ready for more!' },
+};
 
 const app = document.getElementById('app');
-const modeIndicator = document.getElementById('mode-indicator');
+const modeSwitch = document.getElementById('mode-switch');
 const timeDisplay = document.getElementById('time-display');
 const startPauseBtn = document.getElementById('start-pause-btn');
 const resetBtn = document.getElementById('reset-btn');
@@ -10,17 +14,27 @@ const minutesViewport = document.getElementById('minutes-viewport');
 const minutesTrack = document.getElementById('minutes-track');
 
 let selectedWorkMinutes = 25;
+let selectedPauseMinutes = 5;
 let timeRemaining = selectedWorkMinutes * 60;
 let isRunning = false;
 let currentMode = 'work';
 let intervalId = null;
 
-function getWorkDuration() {
-  return selectedWorkMinutes * 60;
+function getSelectedMinutes(mode) {
+  return mode === 'work' ? selectedWorkMinutes : selectedPauseMinutes;
+}
+
+function setSelectedMinutes(mode, minute) {
+  if (!MINUTES_OPTIONS.includes(minute)) return;
+  if (mode === 'work') {
+    selectedWorkMinutes = minute;
+  } else {
+    selectedPauseMinutes = minute;
+  }
 }
 
 function getDurationForMode(mode) {
-  return mode === 'work' ? getWorkDuration() : BREAK_DURATION;
+  return getSelectedMinutes(mode) * 60;
 }
 
 function formatTime(seconds) {
@@ -36,9 +50,24 @@ function formatDatetime(seconds) {
   return `PT${mins}M${secs}S`;
 }
 
+function updateEndCapLabels() {
+  const labels = END_CAP_LABELS[currentMode];
+  minutesTrack.querySelector('.minutes-picker__end-cap--start .minutes-picker__end-cap-text').textContent =
+    labels.start;
+  minutesTrack.querySelector('.minutes-picker__end-cap--end .minutes-picker__end-cap-text').textContent =
+    labels.end;
+}
+
+function updateModeSwitch() {
+  modeSwitch.querySelectorAll('.mode-switch__option').forEach((btn) => {
+    btn.setAttribute('aria-pressed', btn.dataset.mode === currentMode ? 'true' : 'false');
+  });
+}
+
 function updateDOM() {
   app.dataset.mode = currentMode;
-  modeIndicator.textContent = currentMode === 'work' ? 'Work' : 'Break';
+  app.dataset.running = isRunning ? 'true' : 'false';
+  updateModeSwitch();
   timeDisplay.textContent = formatTime(timeRemaining);
   timeDisplay.dateTime = formatDatetime(timeRemaining);
   startPauseBtn.textContent = isRunning ? 'Pause' : 'Start';
@@ -51,6 +80,11 @@ function stopInterval() {
   }
 }
 
+function startTimer() {
+  isRunning = true;
+  intervalId = setInterval(tick, 1000);
+}
+
 function tick() {
   timeRemaining -= 1;
   updateDOM();
@@ -60,11 +94,28 @@ function tick() {
   }
 }
 
+function setMode(mode) {
+  if (mode !== 'work' && mode !== 'pause') return;
+  if (mode === currentMode) return;
+
+  currentMode = mode;
+  updateEndCapLabels();
+  scrollToMinute(getSelectedMinutes(currentMode));
+
+  if (!isRunning) {
+    timeRemaining = getDurationForMode(currentMode);
+  }
+
+  updateDOM();
+}
+
 function switchMode() {
   stopInterval();
-  isRunning = false;
-  currentMode = currentMode === 'work' ? 'break' : 'work';
+  currentMode = currentMode === 'work' ? 'pause' : 'work';
+  updateEndCapLabels();
+  scrollToMinute(getSelectedMinutes(currentMode));
   timeRemaining = getDurationForMode(currentMode);
+  startTimer();
   updateDOM();
 }
 
@@ -73,8 +124,7 @@ function toggleStartPause() {
     stopInterval();
     isRunning = false;
   } else {
-    isRunning = true;
-    intervalId = setInterval(tick, 1000);
+    startTimer();
   }
   updateDOM();
 }
@@ -105,11 +155,12 @@ function createMajorTick(minute) {
 }
 
 function buildMinutesTrack() {
-  minutesTrack.appendChild(createEndCap("let's go!", 'start'));
-  WORK_MINUTES_OPTIONS.forEach((minute) => {
+  const labels = END_CAP_LABELS[currentMode];
+  minutesTrack.appendChild(createEndCap(labels.start, 'start'));
+  MINUTES_OPTIONS.forEach((minute) => {
     minutesTrack.appendChild(createMajorTick(minute));
   });
-  minutesTrack.appendChild(createEndCap('Take a break!', 'end'));
+  minutesTrack.appendChild(createEndCap(labels.end, 'end'));
 }
 
 let minScrollLeft = 0;
@@ -153,7 +204,7 @@ function getCenteredMinute() {
   const viewportRect = minutesViewport.getBoundingClientRect();
   const centerX = viewportRect.left + viewportRect.width / 2;
 
-  let closestMinute = selectedWorkMinutes;
+  let closestMinute = getSelectedMinutes(currentMode);
   let closestDistance = Infinity;
 
   minutesTrack.querySelectorAll('[data-minute]').forEach((tick) => {
@@ -180,27 +231,28 @@ function scrollToMinute(minute, behavior = 'auto') {
   });
 }
 
-function applySelectedWorkMinutes(minute) {
-  if (!WORK_MINUTES_OPTIONS.includes(minute) || minute === selectedWorkMinutes) return;
+function applySelectedMinutes(minute) {
+  const current = getSelectedMinutes(currentMode);
+  if (!MINUTES_OPTIONS.includes(minute) || minute === current) return;
 
-  selectedWorkMinutes = minute;
+  setSelectedMinutes(currentMode, minute);
 
-  if (!isRunning && currentMode === 'work') {
-    timeRemaining = getWorkDuration();
+  if (!isRunning) {
+    timeRemaining = getDurationForMode(currentMode);
     updateDOM();
   }
 }
 
 function handleMinutesScroll() {
   clampScroll();
-  applySelectedWorkMinutes(getCenteredMinute());
+  applySelectedMinutes(getCenteredMinute());
 }
 
 function initMinutesPicker() {
   buildMinutesTrack();
   updateEndCapWidth();
   updateScrollLimits();
-  scrollToMinute(selectedWorkMinutes);
+  scrollToMinute(getSelectedMinutes(currentMode));
 
   minutesViewport.addEventListener('scroll', handleMinutesScroll, { passive: true });
   minutesViewport.addEventListener('scrollend', handleMinutesScroll);
@@ -211,8 +263,15 @@ function initMinutesPicker() {
   });
 }
 
+function initModeSwitch() {
+  modeSwitch.querySelectorAll('.mode-switch__option').forEach((btn) => {
+    btn.addEventListener('click', () => setMode(btn.dataset.mode));
+  });
+}
+
 startPauseBtn.addEventListener('click', toggleStartPause);
 resetBtn.addEventListener('click', reset);
 
 initMinutesPicker();
+initModeSwitch();
 updateDOM();

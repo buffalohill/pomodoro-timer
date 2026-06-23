@@ -10,17 +10,17 @@
   --color-text-muted: #9898a8;
   --color-text-subtle: #686878;
 
-  /* Colors — work mode (warm) */
-  --color-work: #e85d4c;
-  --color-work-muted: #c94a3b;
-  --color-work-subtle: rgba(232, 93, 76, 0.15);
-  --color-work-glow: rgba(232, 93, 76, 0.35);
+  /* Palette — Work */
+  --palette-work-accent: #e85d4c;
+  --palette-work-accent-muted: #c94a3b;
+  --palette-work-subtle: rgba(232, 93, 76, 0.15);
+  --palette-work-glow: rgba(232, 93, 76, 0.35);
 
-  /* Colors — break mode (cool) */
-  --color-break: #4cb8a4;
-  --color-break-muted: #3a9a88;
-  --color-break-subtle: rgba(76, 184, 164, 0.15);
-  --color-break-glow: rgba(76, 184, 164, 0.35);
+  /* Palette — Pause */
+  --palette-pause-accent: #5f9a5f;
+  --palette-pause-accent-muted: #4a8050;
+  --palette-pause-subtle: rgba(95, 154, 95, 0.15);
+  --palette-pause-glow: rgba(95, 154, 95, 0.35);
 
   /* Spacing */
   --space-xs: 0.25rem;
@@ -72,6 +72,16 @@
   --minutes-label-band-height: calc(
     var(--minutes-tick-height-major) + var(--space-xs) + var(--minutes-tick-label-height)
   );
+  --minutes-section-label-gap: -0.625rem;
+  --minutes-section-label-opacity: 0.55;
+  --minutes-picker-running-opacity: 0.15;
+  --minutes-picker-opacity-transition: 0.3s ease;
+
+  /* Mode switch */
+  --mode-switch-width: 14rem;
+  --mode-switch-height: 2.5rem;
+  --mode-switch-padding: var(--space-xs);
+  --mode-switch-transition: 0.2s ease;
 }
 
 /* Reset */
@@ -104,40 +114,98 @@ body {
 }
 
 #app[data-mode="work"] {
-  --color-accent: var(--color-work);
-  --color-accent-muted: var(--color-work-muted);
+  --color-accent: var(--palette-work-accent);
+  --color-accent-muted: var(--palette-work-accent-muted);
+  --color-accent-subtle: var(--palette-work-subtle);
+  --color-minutes-label: var(--palette-work-accent);
+  --color-minutes-tick: var(--palette-work-accent);
+  --color-minutes-baseline: var(--palette-work-accent);
+  --color-minutes-end-cap: var(--palette-work-accent);
 }
 
-#app[data-mode="break"] {
-  --color-accent: var(--color-break);
-  --color-accent-muted: var(--color-break-muted);
+#app[data-mode="pause"] {
+  --color-accent: var(--palette-pause-accent);
+  --color-accent-muted: var(--palette-pause-accent-muted);
+  --color-accent-subtle: var(--palette-pause-subtle);
+  --color-minutes-label: var(--palette-pause-accent);
+  --color-minutes-tick: var(--palette-pause-accent);
+  --color-minutes-baseline: var(--palette-pause-accent);
+  --color-minutes-end-cap: var(--palette-pause-accent);
 }
 
 #app[data-mode="work"] .timer__display {
-  color: var(--color-work);
+  color: var(--palette-work-accent);
 }
 
-#app[data-mode="break"] .timer__display {
-  color: var(--color-break);
+#app[data-mode="pause"] .timer__display {
+  color: var(--palette-pause-accent);
+}
+
+/* Mode switch */
+.mode-switch {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: var(--mode-switch-width);
+  height: var(--mode-switch-height);
+  padding: var(--mode-switch-padding);
+  background-color: var(--color-bg-muted);
+  border-radius: var(--radius-full);
+}
+
+.mode-switch__option {
+  position: relative;
+  z-index: 1;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color var(--mode-switch-transition);
+}
+
+.mode-switch__option[aria-pressed="true"] {
+  color: var(--color-text);
+}
+
+.mode-switch__thumb {
+  position: absolute;
+  top: var(--mode-switch-padding);
+  left: var(--mode-switch-padding);
+  width: calc(50% - var(--mode-switch-padding));
+  height: calc(100% - var(--mode-switch-padding) * 2);
+  background-color: var(--color-accent);
+  border-radius: var(--radius-full);
+  transition: left var(--mode-switch-transition);
+  pointer-events: none;
+}
+
+#app[data-mode="pause"] .mode-switch__thumb {
+  left: calc(50%);
 }
 
 /* Minutes picker */
 .minutes-picker {
   width: 100%;
   max-width: 24rem;
-  --color-minutes-label: var(--color-work);
-  --color-minutes-tick: var(--color-work);
-  --color-minutes-baseline: var(--color-work);
-  --color-minutes-end-cap: var(--color-work);
+  transition: opacity var(--minutes-picker-opacity-transition);
+}
+
+#app[data-running="true"] .minutes-picker {
+  opacity: var(--minutes-picker-running-opacity);
 }
 
 .minutes-picker__label {
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--minutes-section-label-gap);
   font-size: var(--text-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-minutes-label);
+  opacity: var(--minutes-section-label-opacity);
 }
 
 .minutes-picker__frame {
@@ -275,18 +343,6 @@ body {
   gap: var(--space-lg);
   width: 100%;
   max-width: 24rem;
-}
-
-.timer__header {
-  text-align: center;
-}
-
-.timer__mode {
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-accent);
 }
 
 .timer__display-wrapper {

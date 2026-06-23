@@ -8,8 +8,14 @@
 </head>
 <body>
     <div id="app" data-mode="work">
-        <section class="minutes-picker" aria-label="Set work duration in minutes">
-            <p class="minutes-picker__label">Minutes</p>
+        <div class="mode-switch" id="mode-switch" role="group" aria-label="Timer mode">
+            <button type="button" class="mode-switch__option" data-mode="work" aria-pressed="true">Work</button>
+            <button type="button" class="mode-switch__option" data-mode="pause" aria-pressed="false">Pause</button>
+            <span class="mode-switch__thumb" aria-hidden="true"></span>
+        </div>
+
+        <section class="minutes-picker" aria-label="Set duration in minutes">
+            <p class="minutes-picker__label">Set duration in minutes</p>
             <div class="minutes-picker__frame">
                 <div class="minutes-picker__viewport" id="minutes-viewport">
                     <div class="minutes-picker__track" id="minutes-track"></div>
@@ -19,10 +25,6 @@
         </section>
 
         <main class="timer">
-            <header class="timer__header">
-                <p id="mode-indicator" class="timer__mode">Work</p>
-            </header>
-
             <div class="timer__display-wrapper">
                 <time id="time-display" class="timer__display" datetime="PT25M">25:00</time>
             </div>
