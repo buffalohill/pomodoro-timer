@@ -7,13 +7,16 @@
     <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
+    <!-- data-mode and data-running are updated by main.js -->
     <div id="app" data-mode="work">
+        <!-- Work / Pause mode switch -->
         <div class="mode-switch" id="mode-switch" role="group" aria-label="Timer mode">
             <button type="button" class="mode-switch__option" data-mode="work" aria-pressed="true">Work</button>
             <button type="button" class="mode-switch__option" data-mode="pause" aria-pressed="false">Pause</button>
             <span class="mode-switch__thumb" aria-hidden="true"></span>
         </div>
 
+        <!-- Minutes duration picker (track built by JS) -->
         <section class="minutes-picker" aria-label="Set duration in minutes">
             <p class="minutes-picker__label">Set duration in minutes</p>
             <div class="minutes-picker__frame">
@@ -24,6 +27,7 @@
             </div>
         </section>
 
+        <!-- Countdown timer + controls -->
         <main class="timer">
             <div class="timer__display-wrapper">
                 <time id="time-display" class="timer__display" datetime="PT25M">25:00</time>

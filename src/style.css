@@ -1,3 +1,5 @@
+/* Pomodoro timer styles — tokens, mode palettes, minutes picker, countdown UI. */
+
 :root {
   /* Colors — base (dark theme) */
   --color-bg: #121218;
@@ -14,13 +16,11 @@
   --palette-work-accent: #e85d4c;
   --palette-work-accent-muted: #c94a3b;
   --palette-work-subtle: rgba(232, 93, 76, 0.15);
-  --palette-work-glow: rgba(232, 93, 76, 0.35);
 
   /* Palette — Pause */
   --palette-pause-accent: #5f9a5f;
   --palette-pause-accent-muted: #4a8050;
   --palette-pause-subtle: rgba(95, 154, 95, 0.15);
-  --palette-pause-glow: rgba(95, 154, 95, 0.35);
 
   /* Spacing */
   --space-xs: 0.25rem;
@@ -64,7 +64,7 @@
   --minutes-baseline-width: 1px;
   --minutes-baseline-opacity: 0.5;
   --minutes-fade-width: 4rem;
-  --minutes-end-cap-width: 8rem;
+  --minutes-end-cap-width: 8rem; /* overridden at runtime by JS */
   --minutes-end-cap-opacity: 0.4;
   --minutes-end-cap-font-size: var(--text-sm);
   --minutes-end-cap-text-nudge: var(--space-sm);
@@ -84,7 +84,8 @@
   --mode-switch-transition: 0.2s ease;
 }
 
-/* Reset */
+/* --- Reset --- */
+
 *,
 *::before,
 *::after {
@@ -92,7 +93,8 @@
   margin: 0;
 }
 
-/* Base */
+/* --- Base --- */
+
 body {
   min-height: 100vh;
   font-family: var(--font-body);
@@ -113,10 +115,11 @@ body {
   padding: var(--space-xl) var(--space-md) var(--space-md);
 }
 
+/* --- Mode palettes (set by JS via data-mode on #app) --- */
+
 #app[data-mode="work"] {
   --color-accent: var(--palette-work-accent);
   --color-accent-muted: var(--palette-work-accent-muted);
-  --color-accent-subtle: var(--palette-work-subtle);
   --color-minutes-label: var(--palette-work-accent);
   --color-minutes-tick: var(--palette-work-accent);
   --color-minutes-baseline: var(--palette-work-accent);
@@ -126,22 +129,14 @@ body {
 #app[data-mode="pause"] {
   --color-accent: var(--palette-pause-accent);
   --color-accent-muted: var(--palette-pause-accent-muted);
-  --color-accent-subtle: var(--palette-pause-subtle);
   --color-minutes-label: var(--palette-pause-accent);
   --color-minutes-tick: var(--palette-pause-accent);
   --color-minutes-baseline: var(--palette-pause-accent);
   --color-minutes-end-cap: var(--palette-pause-accent);
 }
 
-#app[data-mode="work"] .timer__display {
-  color: var(--palette-work-accent);
-}
+/* --- Mode switch (Work = left, Pause = right) --- */
 
-#app[data-mode="pause"] .timer__display {
-  color: var(--palette-pause-accent);
-}
-
-/* Mode switch */
 .mode-switch {
   position: relative;
   display: grid;
@@ -187,13 +182,15 @@ body {
   left: calc(50%);
 }
 
-/* Minutes picker */
+/* --- Minutes picker --- */
+
 .minutes-picker {
   width: 100%;
   max-width: 24rem;
   transition: opacity var(--minutes-picker-opacity-transition);
 }
 
+/* Faded while timer runs (data-running set by JS); still scrollable */
 #app[data-running="true"] .minutes-picker {
   opacity: var(--minutes-picker-running-opacity);
 }
@@ -217,6 +214,7 @@ body {
   width: 100%;
 }
 
+/* Full-width baseline — fixed to frame, ticks scroll above it */
 .minutes-picker__frame::before {
   content: "";
   position: absolute;
@@ -237,6 +235,7 @@ body {
   scrollbar-width: none;
   width: 100%;
   padding-inline: calc(50% - var(--minutes-tick-cell-width) / 2);
+  /* Edge fade signals horizontal scroll */
   -webkit-mask-image: linear-gradient(
     to right,
     transparent,
@@ -297,6 +296,7 @@ body {
   height: var(--minutes-tick-height-major);
 }
 
+/* Decorative text beyond 5 / 45 snap range — width from JS */
 .minutes-picker__end-cap {
   position: relative;
   flex: 0 0 var(--minutes-end-cap-width);
@@ -325,6 +325,7 @@ body {
   transform: translate(calc(-50% - var(--minutes-end-cap-text-nudge)), 50%);
 }
 
+/* Fixed center pointer — does not scroll with the track */
 .minutes-picker__indicator {
   flex-shrink: 0;
   width: 0;
@@ -335,7 +336,8 @@ body {
   pointer-events: none;
 }
 
-/* Timer */
+/* --- Timer --- */
+
 .timer {
   display: flex;
   flex-direction: column;
@@ -356,6 +358,7 @@ body {
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-tight);
   font-variant-numeric: tabular-nums;
+  color: var(--color-accent);
 }
 
 .timer__controls {

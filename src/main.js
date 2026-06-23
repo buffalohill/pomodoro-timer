@@ -1,9 +1,15 @@
+// Pomodoro timer — Work/Pause modes, scroll-wheel duration picker, auto-cycling countdown.
+
+// --- Constants ---
+
 const MINUTES_OPTIONS = [5, 10, 15, 20, 25, 30, 35, 40, 45];
 
 const END_CAP_LABELS = {
-  work: { start: "Let's go!", end: '...then take a break!' },
-  pause: { start: 'Refuel your energy!', end: '...then ready for more!' },
+  work: { start: "Let's go...", end: '...then take a break!' },
+  pause: { start: 'Genuinely relax...', end: '...then ready for more!' },
 };
+
+// --- DOM references ---
 
 const app = document.getElementById('app');
 const modeSwitch = document.getElementById('mode-switch');
@@ -13,12 +19,22 @@ const resetBtn = document.getElementById('reset-btn');
 const minutesViewport = document.getElementById('minutes-viewport');
 const minutesTrack = document.getElementById('minutes-track');
 
+// --- State ---
+
+// Each mode stores its own wheel selection independently.
 let selectedWorkMinutes = 25;
 let selectedPauseMinutes = 5;
+
 let timeRemaining = selectedWorkMinutes * 60;
 let isRunning = false;
 let currentMode = 'work';
 let intervalId = null;
+
+// Scroll bounds — wheel stops at 5 and 45; end-cap text sits outside these limits.
+let minScrollLeft = 0;
+let maxScrollLeft = 0;
+
+// --- Duration helpers ---
 
 function getSelectedMinutes(mode) {
   return mode === 'work' ? selectedWorkMinutes : selectedPauseMinutes;
@@ -37,6 +53,8 @@ function getDurationForMode(mode) {
   return getSelectedMinutes(mode) * 60;
 }
 
+// --- Display helpers ---
+
 function formatTime(seconds) {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
@@ -49,6 +67,18 @@ function formatDatetime(seconds) {
   if (secs === 0) return `PT${mins}M`;
   return `PT${mins}M${secs}S`;
 }
+
+function updateDOM() {
+  // data-mode drives palette; data-running fades the minutes picker in CSS.
+  app.dataset.mode = currentMode;
+  app.dataset.running = isRunning ? 'true' : 'false';
+  updateModeSwitch();
+  timeDisplay.textContent = formatTime(timeRemaining);
+  timeDisplay.dateTime = formatDatetime(timeRemaining);
+  startPauseBtn.textContent = isRunning ? 'Pause' : 'Start';
+}
+
+// --- Mode UI sync ---
 
 function updateEndCapLabels() {
   const labels = END_CAP_LABELS[currentMode];
@@ -64,14 +94,7 @@ function updateModeSwitch() {
   });
 }
 
-function updateDOM() {
-  app.dataset.mode = currentMode;
-  app.dataset.running = isRunning ? 'true' : 'false';
-  updateModeSwitch();
-  timeDisplay.textContent = formatTime(timeRemaining);
-  timeDisplay.dateTime = formatDatetime(timeRemaining);
-  startPauseBtn.textContent = isRunning ? 'Pause' : 'Start';
-}
+// --- Timer engine ---
 
 function stopInterval() {
   if (intervalId !== null) {
@@ -94,6 +117,9 @@ function tick() {
   }
 }
 
+// --- Mode switching ---
+
+// Manual switch via the Work/Pause control.
 function setMode(mode) {
   if (mode !== 'work' && mode !== 'pause') return;
   if (mode === currentMode) return;
@@ -101,14 +127,12 @@ function setMode(mode) {
   currentMode = mode;
   updateEndCapLabels();
   scrollToMinute(getSelectedMinutes(currentMode));
-
-  if (!isRunning) {
-    timeRemaining = getDurationForMode(currentMode);
-  }
-
+  // While running, immediately load the new mode's stored duration (timer keeps going).
+  timeRemaining = getDurationForMode(currentMode);
   updateDOM();
 }
 
+// Auto-switch when a session hits 0:00 — flips mode and starts the next session.
 function switchMode() {
   stopInterval();
   currentMode = currentMode === 'work' ? 'pause' : 'work';
@@ -118,6 +142,8 @@ function switchMode() {
   startTimer();
   updateDOM();
 }
+
+// --- Timer controls ---
 
 function toggleStartPause() {
   if (isRunning) {
@@ -135,6 +161,8 @@ function reset() {
   timeRemaining = getDurationForMode(currentMode);
   updateDOM();
 }
+
+// --- Minutes picker — build ---
 
 function createEndCap(text, side) {
   const cap = document.createElement('div');
@@ -163,8 +191,7 @@ function buildMinutesTrack() {
   minutesTrack.appendChild(createEndCap(labels.end, 'end'));
 }
 
-let minScrollLeft = 0;
-let maxScrollLeft = 0;
+// --- Minutes picker — scroll ---
 
 function getScrollLeftToCenterTick(tick) {
   const viewportRect = minutesViewport.getBoundingClientRect();
@@ -237,6 +264,7 @@ function applySelectedMinutes(minute) {
 
   setSelectedMinutes(currentMode, minute);
 
+  // While running, only the stored value changes — display updates on reset or mode switch.
   if (!isRunning) {
     timeRemaining = getDurationForMode(currentMode);
     updateDOM();
@@ -262,6 +290,8 @@ function initMinutesPicker() {
     clampScroll();
   });
 }
+
+// --- Initialization ---
 
 function initModeSwitch() {
   modeSwitch.querySelectorAll('.mode-switch__option').forEach((btn) => {
